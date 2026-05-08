@@ -3,7 +3,7 @@
 
 @theme {
   --color-primary: #45a755;
-  --color-bg: #fff;
+  --color-bg: #ffffff;
   --color-text: #222;
   --font-display: 'Syne', sans-serif;
   --font-body: 'DM Sans', sans-serif;
@@ -26,9 +26,6 @@ html {
 
 body {
   font-family: var(--font-body);
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  -webkit-font-smoothing: antialiased;
 }
 
 h1,
@@ -41,7 +38,7 @@ h6 {
 }
 
 ::selection {
-  background: var(--color-accent);
+  background: var(--color-text);
   color: white;
 }
 

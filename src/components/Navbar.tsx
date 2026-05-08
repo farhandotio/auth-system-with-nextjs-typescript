@@ -1,21 +1,20 @@
 'use client';
 import { IUser } from '@/models/user.model';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import logo from '@/assets/logo.png';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   AiOutlineLogin,
   AiOutlineLogout,
   AiOutlineMenu,
   AiOutlinePhone,
   AiOutlineSearch,
-  AiOutlineSignature,
   AiOutlineUser,
 } from 'react-icons/ai';
 import { MdDashboard } from 'react-icons/md';
 import { AnimatePresence, motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { signOut } from 'next-auth/react';
+import { FiX } from 'react-icons/fi';
 
 const NAV_LINKS = [
   { label: 'Home', path: '/' },
@@ -25,190 +24,170 @@ const NAV_LINKS = [
 ];
 
 const DASHBOARD_PATH: Record<string, string> = {
-  user: '/profile',
-  seller: '/seller/dashboard',
-  admin: '/admin/dashboard',
+  user: '/dashboard',
+  seller: '/dashboard',
+  admin: '/dashboard',
 };
 
 const Navbar = ({ user }: { user: IUser | null }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const [openMenu, setOpenMenu] = useState(false);
   const [openSidebar, setOpenSidebar] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const dashboardPath = user ? (DASHBOARD_PATH[user.role] ?? '/profile') : '/profile';
+  const hideNavbarPaths = ['/login', '/register'];
+  const isDashboard = pathname?.startsWith('/dashboard');
+  const isAuthPage = hideNavbarPaths.includes(pathname);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
+        setOpenMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (isAuthPage || isDashboard) {
+    return null;
+  }
+
+  const dashboardPath = user ? (DASHBOARD_PATH[user?.role] ?? '/profile') : '/profile';
 
   return (
     <>
       <header
-        className="fixed top-0 h-18 flex items-center justify-center left-0 w-full z-50 bg-text text-white"
+        className="fixed top-0 h-16 flex items-center justify-center left-0 w-full z-50 bg-[#fff] dark:bg-[#111] border-b border-[#eee] dark:border-[#222] transition-colors duration-200"
         role="banner"
       >
-        <div className="px-4 py-3 flex items-center justify-between w-full">
-          {/* Left */}
-          <div className="flex items-center gap-2">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+        <div className="px-4 md:px-6 flex items-center justify-between w-full mx-auto">
+          {/* Left Section */}
+          <div className="flex items-center gap-6">
+            <button
               onClick={() => setOpenSidebar(true)}
-              aria-label="Open navigation menu"
-              aria-expanded={openSidebar}
-              className="md:hidden p-2 rounded-sm hover:bg-white/10 transition-colors"
+              className="md:hidden text-[#111] dark:text-[#fff] hover:bg-[#f5f5f5] dark:hover:bg-[#222] rounded-sm transition-all"
             >
-              <AiOutlineMenu size={20} aria-hidden="true" />
-            </motion.button>
+              <AiOutlineMenu size={20} />
+            </button>
 
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/')}
-              aria-label="Gadget BDs — go to homepage"
-              className="flex items-center gap-2"
+              className="flex items-center gap-3 group"
             >
-              {/* <Image
-                src={logo}
-                width={32}
-                height={32}
-                loading="eager"
-                alt="Gadget BDs logo"
-                className="w-8 h-8 object-contain"
-              /> */}
-              <span className="w-8 h-8 bg-primary flex items-center justify-center rounded-full text-white">
-                G
-              </span>
+              {/* <div className="w-8 h-8 bg-[#111] dark:bg-[#fff] flex items-center justify-center rounded-full transition-all">
+                <span className="text-white dark:text-[#111] text-sm font-black">G</span>
+              </div> */}
               <span
-                className="text-base font-bold hidden md:inline"
+                className="text-lg font-bold tracking-widest uppercase hidden md:inline text-[#111] dark:text-[#fff]"
                 style={{ fontFamily: 'Syne, sans-serif' }}
               >
                 Gadget BDs
               </span>
             </motion.button>
 
-            <nav className="hidden md:flex items-center gap-1 ml-6" aria-label="Main navigation">
+            <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
               {NAV_LINKS.map((link) => (
-                <motion.button
+                <button
                   key={link.path}
-                  whileTap={{ scale: 0.97 }}
                   onClick={() => router.push(link.path)}
-                  className="px-4 py-2 rounded-sm text-sm text-white/60 hover:text-white hover:bg-white/10 transition-all"
+                  className="px-4 py-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#555] dark:text-[#bbb] hover:text-[#111] dark:hover:text-[#fff] transition-all"
                 >
                   {link.label}
-                </motion.button>
+                </button>
               ))}
             </nav>
           </div>
 
-          {/* Right */}
-          <div className="flex items-center justify-center gap-2">
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => router.push('/categories')}
-              aria-label="Search"
-              className="hidden md:flex p-2 rounded-sm hover:bg-white/10 transition-colors text-white/60 hover:text-white"
+          {/* Right Section */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => router.push('/search')}
+              className="p-2 text-[#555] dark:text-[#bbb] hover:text-[#111] dark:hover:text-[#fff] transition-colors"
             >
-              <AiOutlineSearch size={20} aria-hidden="true" />
-            </motion.button>
+              <AiOutlineSearch size={18} />
+            </button>
 
-            <motion.button
-              whileTap={{ scale: 0.9 }}
-              onClick={() => router.push('/support')}
-              aria-label="Support"
-              className="hidden md:flex p-2 rounded-sm hover:bg-white/10 transition-colors text-white/60 hover:text-white"
-            >
-              <AiOutlinePhone size={20} aria-hidden="true" />
-            </motion.button>
+            <div className="h-4 w-[1px] bg-[#eee] dark:bg-[#333] hidden md:block mx-1" />
 
-            {/* Authenticated */}
             {user ? (
-              <div className="relative">
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
+              <div className="relative" ref={dropdownRef}>
+                <button
                   onClick={() => setOpenMenu(!openMenu)}
-                  aria-label="Open profile menu"
-                  aria-expanded={openMenu}
-                  aria-haspopup="menu"
-                  className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary flex items-center justify-center"
+                  className="flex items-center gap-3 p-1 rounded-full group"
                 >
-                  {user.image ? (
-                    <Image
-                      src={user.image}
-                      width={32}
-                      height={32}
-                      loading="eager"
-                      alt={`${user.name ?? 'User'} profile picture`}
-                      className="w-8 h-8 object-cover rounded-full ring-2 ring-white/10"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors text-white/60 hover:text-white">
-                      <AiOutlineUser size={16} aria-hidden="true" />
-                    </div>
-                  )}
-                </motion.button>
+                  <div className="h-8 w-8 rounded-full bg-[#eee] dark:bg-[#222] border border-[#ddd] dark:border-[#333] flex items-center justify-center overflow-hidden">
+                    {user?.image ? (
+                      <Image
+                        src={user?.image}
+                        width={32}
+                        height={32}
+                        alt="user"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <AiOutlineUser
+                        size={16}
+                        className="text-[#555] group-hover:text-primary transition-colors"
+                      />
+                    )}
+                  </div>
+                </button>
 
                 <AnimatePresence>
                   {openMenu && (
                     <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 5 }}
                       transition={{ duration: 0.15 }}
-                      role="menu"
-                      aria-label="Profile menu"
-                      className="absolute right-0 mt-2 w-52 bg-text rounded-sm shadow-2xl border border-white/10 overflow-hidden"
+                      className="absolute right-0 mt-3 w-52 bg-white dark:bg-[#111] border border-[#eee] dark:border-[#222] rounded-sm shadow-xl p-1"
                     >
-                      {user.name && (
-                        <div className="px-4 py-3 border-b border-white/10">
-                          <p className="text-white text-xs font-semibold truncate">{user.name}</p>
-                          <p className="text-white/40 text-[10px] capitalize mt-0.5">{user.role}</p>
-                        </div>
-                      )}
+                      <div className="px-4 py-3 border-b border-[#eee] dark:border-[#222] mb-1">
+                        <p className="text-[#111] dark:text-white text-[10px] font-bold uppercase truncate">
+                          {user?.name}
+                        </p>
+                        <p className="text-primary text-[8px] font-bold uppercase tracking-tighter mt-0.5">
+                          {user?.role}
+                        </p>
+                      </div>
                       <button
-                        role="menuitem"
                         onClick={() => {
                           router.push(dashboardPath);
                           setOpenMenu(false);
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-white/60 hover:text-white hover:bg-white/10 transition-colors text-left"
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-[10px] font-bold uppercase text-[#555] dark:text-[#bbb] hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-colors text-left"
                       >
-                        <MdDashboard size={15} aria-hidden="true" />
-                        {user.role === 'admin'
-                          ? 'Admin Dashboard'
-                          : user.role === 'seller'
-                            ? 'Seller Dashboard'
-                            : 'My Profile'}
+                        <MdDashboard size={14} /> Dashboard
                       </button>
-                      <div className="border-t border-white/10">
-                        <button
-                          role="menuitem"
-                          onClick={() => {
-                            signOut();
-                            setOpenMenu(false);
-                          }}
-                          className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors text-left"
-                        >
-                          <AiOutlineLogout size={15} aria-hidden="true" />
-                          Sign Out
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setOpenMenu(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-2.5 text-[10px] font-bold uppercase text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors text-left border-t border-[#eee] dark:border-[#222]"
+                      >
+                        <AiOutlineLogout size={14} /> Sign Out
+                      </button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
             ) : (
-              /* Guest */
               <div className="flex items-center gap-2">
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
+                <button
                   onClick={() => router.push('/login')}
-                  className="px-4 py-1.5 rounded-sm text-sm text-white/60 hover:text-white hover:bg-white/10 transition-all hidden md:block"
+                  className="px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-[#555] dark:text-[#bbb] hover:text-[#111] dark:hover:text-[#fff] transition-all hidden md:block"
                 >
                   Sign In
-                </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
+                </button>
+                <button
                   onClick={() => router.push('/register')}
-                  className="px-4 py-1.5 rounded-sm text-sm bg-primary text-white hover:opacity-90 transition-all"
+                  className="px-5 py-1.5 bg-[#111] dark:bg-[#fff] text-white dark:text-[#111] text-[10px] font-bold uppercase tracking-widest rounded-sm hover:bg-primary dark:hover:bg-primary dark:hover:text-white transition-all shadow-sm"
                 >
                   Sign Up
-                </motion.button>
+                </button>
               </div>
             )}
           </div>
@@ -223,49 +202,29 @@ const Navbar = ({ user }: { user: IUser | null }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-40"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
               onClick={() => setOpenSidebar(false)}
-              aria-hidden="true"
             />
             <motion.aside
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 40, stiffness: 300 }}
-              className="fixed top-0 left-0 h-full w-64 bg-text z-50 flex flex-col"
-              role="dialog"
-              aria-label="Navigation menu"
-              aria-modal="true"
+              transition={{ type: 'tween', duration: 0.25 }}
+              className="fixed top-0 left-0 h-full w-72 bg-white dark:bg-[#111] z-101 flex flex-col shadow-2xl"
             >
-              <div className="flex items-center justify-between p-5 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  {/* <Image
-                    src={logo}
-                    width={28}
-                    height={28}
-                    alt="Gadget BDs logo"
-                    className="w-7 h-7 object-contain"
-                  /> */}
-                  <span className="w-8 h-8 bg-primary flex items-center justify-center rounded-full text-white">
-                    G
-                  </span>
-                  <span
-                    className="text-base font-bold text-white"
-                    style={{ fontFamily: 'Syne, sans-serif' }}
-                  >
-                    Gadget BDs
-                  </span>
-                </div>
+              <div className="h-16 flex items-center justify-between px-6 border-b border-[#eee] dark:border-[#222]">
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#111] dark:text-[#fff]">
+                  Menu
+                </span>
                 <button
                   onClick={() => setOpenSidebar(false)}
-                  aria-label="Close navigation menu"
-                  className="text-white/60 hover:text-white flex items-center justify-center text-xl transition-colors"
+                  className="text-[#555] dark:text-[#bbb] hover:text-red-500 transition-colors"
                 >
-                  ✕
+                  <FiX size={20} />
                 </button>
               </div>
 
-              <nav className="flex-1 p-3 flex flex-col gap-0.5" aria-label="Mobile navigation">
+              <nav className="flex-1 p-4 space-y-1">
                 {NAV_LINKS.map((link) => (
                   <button
                     key={link.path}
@@ -273,53 +232,39 @@ const Navbar = ({ user }: { user: IUser | null }) => {
                       router.push(link.path);
                       setOpenSidebar(false);
                     }}
-                    className="flex items-center px-4 py-2.5 rounded-sm text-white/60 hover:text-white hover:bg-white/10 transition-all text-sm text-left"
+                    className="w-full text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-[#555] dark:text-[#bbb] hover:bg-[#f5f5f5] dark:hover:bg-[#222] transition-all rounded-sm"
                   >
                     {link.label}
                   </button>
                 ))}
-                <button
-                  onClick={() => {
-                    router.push('/support');
-                    setOpenSidebar(false);
-                  }}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-sm text-white/60 hover:text-white hover:bg-white/10 transition-all text-sm text-left"
-                >
-                  <AiOutlinePhone size={15} aria-hidden="true" />
-                  Support
+                <button className="w-full text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-[#555] dark:text-[#bbb] flex items-center gap-2">
+                  <AiOutlinePhone size={14} /> Support
                 </button>
               </nav>
 
-              <div className="p-3 border-t border-white/10 flex flex-col gap-1">
-                {user ? (
-                  <button
-                    onClick={() => signOut()}
-                    className="flex items-center gap-3 px-4 py-2.5 rounded-sm text-red-400 hover:bg-red-500/10 transition-all text-sm w-full text-left"
-                  >
-                    <AiOutlineLogout size={15} aria-hidden="true" />
-                    Sign Out
-                  </button>
-                ) : (
+              <div className="p-4 border-t border-[#eee] dark:border-[#222] space-y-2">
+                {!user ? (
                   <>
                     <button
-                      onClick={() => {
-                        router.push('/login');
-                        setOpenSidebar(false);
-                      }}
-                      className="flex items-center px-4 py-2.5 rounded-md text-white/80 hover:text-white border-2 border-white/50 mb-2 hover:bg-white/10 font-medium transition-all text-sm text-left justify-between"
+                      onClick={() => router.push('/login')}
+                      className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-[#111] dark:text-[#fff] border border-[#ddd] dark:border-[#333] rounded-sm"
                     >
-                      <span> Sign In </span> <AiOutlineLogin />
+                      Login
                     </button>
                     <button
-                      onClick={() => {
-                        router.push('/register');
-                        setOpenSidebar(false);
-                      }}
-                      className="flex items-center justify-between px-4 py-2.5 rounded-md bg-primary text-white hover:opacity-90 transition-all text-sm text-left font-medium"
+                      onClick={() => router.push('/register')}
+                      className="w-full py-3 text-[10px] font-bold uppercase tracking-widest bg-primary text-white rounded-sm"
                     >
-                      <span> Sign Up </span> <AiOutlineSignature />
+                      Join Now
                     </button>
                   </>
+                ) : (
+                  <button
+                    onClick={() => signOut()}
+                    className="w-full py-3 text-[10px] font-bold uppercase tracking-widest text-red-500 bg-red-50 dark:bg-red-500/5 rounded-sm"
+                  >
+                    Sign Out
+                  </button>
                 )}
               </div>
             </motion.aside>

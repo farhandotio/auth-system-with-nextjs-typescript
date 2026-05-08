@@ -45,7 +45,7 @@ const RegisterPage = () => {
   };
 
   return (
-    <section className="h-screen flex items-center justify-center bg-[#f8f7ff]">
+    <section className="h-screen flex items-center justify-center bg-[#f8f7ff] dark:bg-[#0a0a0a] transition-colors duration-200">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -59,20 +59,23 @@ const RegisterPage = () => {
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white md:shadow-xl shadow-[#6c63ff18] border border-[#e5e3f5] p-8 md:p-10 max-md:h-screen flex flex-col justify-center">
+        <div className="bg-white dark:bg-[#111] md:shadow-xl dark:md:shadow-none shadow-[#6c63ff18] border border-[#e5e3f5] dark:border-[#222] p-8 md:p-10 max-md:h-screen flex flex-col justify-center transition-colors">
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-text" style={{ fontFamily: 'Syne, sans-serif' }}>
+            <h1
+              className="text-3xl font-bold text-[#0f0f0f] dark:text-white"
+              style={{ fontFamily: 'Syne, sans-serif' }}
+            >
               Create Account
             </h1>
-            <p className="text-[#6b7280] mt-1 text-sm">
+            <p className="text-[#6b7280] dark:text-[#888] mt-1 text-sm">
               Registering as{' '}
-              <span className="text-text font-medium capitalize">{selectedRole}</span>
+              <span className="text-primary font-medium capitalize">{selectedRole}</span>
             </p>
           </div>
 
           <form onSubmit={handleSignUp} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280] uppercase tracking-wider pl-1">
+              <label className="text-xs font-medium text-[#6b7280] dark:text-[#aaa] uppercase tracking-wider pl-1">
                 Full Name
               </label>
               <input
@@ -81,11 +84,11 @@ const RegisterPage = () => {
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="bg-[#f8f7ff] border border-[#e5e3f5] text-text placeholder:text-[#b0adc9] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-text focus:border-transparent transition-all w-full text-sm"
+                className="bg-[#f8f7ff] dark:bg-[#181818] border border-[#e5e3f5] dark:border-[#333] text-[#0f0f0f] dark:text-white placeholder:text-[#b0adc9] dark:placeholder:text-[#555] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-full text-sm"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280] uppercase tracking-wider pl-1">
+              <label className="text-xs font-medium text-[#6b7280] dark:text-[#aaa] uppercase tracking-wider pl-1">
                 Email
               </label>
               <input
@@ -94,11 +97,11 @@ const RegisterPage = () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-[#f8f7ff] border border-[#e5e3f5] text-text placeholder:text-[#b0adc9] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-text focus:border-transparent transition-all w-full text-sm"
+                className="bg-[#f8f7ff] dark:bg-[#181818] border border-[#e5e3f5] dark:border-[#333] text-[#0f0f0f] dark:text-white placeholder:text-[#b0adc9] dark:placeholder:text-[#555] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-full text-sm"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280] uppercase tracking-wider pl-1">
+              <label className="text-xs font-medium text-[#6b7280] dark:text-[#aaa] uppercase tracking-wider pl-1">
                 Password
               </label>
               <div className="relative">
@@ -108,12 +111,12 @@ const RegisterPage = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-[#f8f7ff] border border-[#e5e3f5] text-text placeholder:text-[#b0adc9] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-text focus:border-transparent transition-all w-full pr-11 text-sm"
+                  className="bg-[#f8f7ff] dark:bg-[#181818] border border-[#e5e3f5] dark:border-[#333] text-[#0f0f0f] dark:text-white placeholder:text-[#b0adc9] dark:placeholder:text-[#555] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-full pr-11 text-sm"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[#b0adc9] hover:text-text transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[#b0adc9] dark:text-[#555] hover:text-primary transition-colors"
                 >
                   {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
                 </button>
@@ -124,7 +127,7 @@ const RegisterPage = () => {
               <motion.p
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-red-500 text-xs bg-red-50 border border-red-100 rounded-lg px-4 py-2.5"
+                className="text-red-500 text-xs bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-lg px-4 py-2.5"
               >
                 {error}
               </motion.p>
@@ -134,33 +137,33 @@ const RegisterPage = () => {
               type="submit"
               disabled={loading}
               whileTap={{ scale: 0.98 }}
-              className="mt-2 px-6 py-3.5 bg-text text-white rounded-lg hover:bg-text/95 transition-colors cursor-pointer w-full flex items-center justify-center gap-2 font-medium text-sm disabled:opacity-70"
+              className="mt-2 px-6 py-3.5 bg-[#111] dark:bg-white text-white dark:text-[#111] rounded-lg hover:bg-primary dark:hover:bg-primary dark:hover:text-white transition-all cursor-pointer w-full flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] disabled:opacity-70"
             >
               {loading ? <CgSpinner className="text-xl animate-spin" /> : 'Create Account'}
             </motion.button>
 
             <div className="flex items-center gap-3 my-1">
-              <div className="flex-1 h-px bg-[#e5e3f5]" />
-              <span className="text-xs text-[#b0adc9]">or</span>
-              <div className="flex-1 h-px bg-[#e5e3f5]" />
+              <div className="flex-1 h-px bg-[#e5e3f5] dark:bg-[#222]" />
+              <span className="text-xs text-[#b0adc9] dark:text-[#555]">or</span>
+              <div className="flex-1 h-px bg-[#e5e3f5] dark:bg-[#222]" />
             </div>
 
             <motion.button
               type="button"
               onClick={() => signIn('google', { callbackUrl: '/' })}
               whileTap={{ scale: 0.98 }}
-              className="px-6 py-3.5 bg-white text-text rounded-lg hover:bg-[#f8f7ff] transition-colors cursor-pointer w-full flex items-center justify-center gap-3 border border-[#e5e3f5] text-sm font-medium"
+              className="px-6 py-3.5 bg-white dark:bg-[#111] text-[#0f0f0f] dark:text-white rounded-lg hover:bg-[#f8f7ff] dark:hover:bg-[#222] transition-colors cursor-pointer w-full flex items-center justify-center gap-3 border border-[#e5e3f5] dark:border-[#333] text-[10px] font-bold uppercase tracking-widest"
             >
               <FcGoogle size={20} />
               Continue with Google
             </motion.button>
 
             <div className="flex items-center justify-center pt-2">
-              <p className="text-[#6b7280] text-sm">
+              <p className="text-[#6b7280] dark:text-[#888] text-sm">
                 Have an account?{' '}
                 <span
                   onClick={() => router.push('/login')}
-                  className="text-text cursor-pointer font-medium hover:underline"
+                  className="text-primary cursor-pointer font-medium hover:underline"
                 >
                   Sign in
                 </span>

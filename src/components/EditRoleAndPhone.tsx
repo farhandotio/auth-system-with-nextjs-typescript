@@ -67,7 +67,8 @@ const EditRoleAndPhone = () => {
     setLoading(true);
     try {
       await axios.post('/api/user/edit-role-phone', { role, phone });
-      router.push('/');
+      setLoading(false);
+      router.refresh();
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Something went wrong. Please try again.');
       setLoading(false);
@@ -76,7 +77,7 @@ const EditRoleAndPhone = () => {
 
   return (
     <section
-      className="h-screen flex items-center justify-center bg-[#f8f7ff]"
+      className="h-screen flex items-center justify-center bg-[#f8f7ff] dark:bg-[#0a0a0a] transition-colors duration-200"
       aria-label="Role and phone setup"
     >
       <div
@@ -95,16 +96,16 @@ const EditRoleAndPhone = () => {
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="w-full md:max-w-md relative z-10"
         >
-          <div className="bg-white shadow-xl max-md:h-screen flex flex-col justify-center shadow-[#6c63ff18] border border-[#e5e3f5] p-8 md:p-10">
+          <div className="bg-white dark:bg-[#111] shadow-xl dark:md:shadow-none max-md:h-screen flex flex-col justify-center shadow-[#6c63ff18] border border-[#e5e3f5] dark:border-[#222] p-8 md:p-10 transition-colors">
             {/* Header */}
             <div className="mb-8 text-center">
               <h1
-                className="text-3xl font-bold text-[#0f0f0f]"
+                className="text-3xl font-bold text-[#0f0f0f] dark:text-white"
                 style={{ fontFamily: 'Syne, sans-serif' }}
               >
                 Set Up Your Profile
               </h1>
-              <p className="text-[#6b7280] mt-1 text-sm">
+              <p className="text-[#6b7280] dark:text-[#888] mt-1 text-sm">
                 Choose your role and add a phone number to continue.
               </p>
             </div>
@@ -114,7 +115,7 @@ const EditRoleAndPhone = () => {
               <div className="flex flex-col gap-1">
                 <label
                   htmlFor="phone"
-                  className="text-xs font-medium text-[#6b7280] uppercase tracking-wider pl-1"
+                  className="text-xs font-medium text-[#6b7280] dark:text-[#aaa] uppercase tracking-wider pl-1"
                 >
                   Phone Number
                 </label>
@@ -127,19 +128,16 @@ const EditRoleAndPhone = () => {
                   placeholder="01XXXXXXXXX"
                   maxLength={11}
                   required
-                  aria-required="true"
-                  aria-label="Phone number"
-                  aria-describedby={error && !role ? 'form-error' : undefined}
-                  className="bg-[#f8f7ff] border border-[#e5e3f5] text-[#0f0f0f] placeholder:text-[#b0adc9] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-text focus:border-transparent transition-all w-full text-sm"
+                  className="bg-[#f8f7ff] dark:bg-[#181818] border border-[#e5e3f5] dark:border-[#333] text-[#0f0f0f] dark:text-white placeholder:text-[#b0adc9] dark:placeholder:text-[#555] p-3.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all w-full text-sm"
                 />
               </div>
 
               {/* Role Selection */}
               <fieldset>
-                <legend className="text-xs font-medium text-[#6b7280] uppercase tracking-wider pl-1 mb-3">
+                <legend className="text-xs font-medium text-[#6b7280] dark:text-[#aaa] uppercase tracking-wider pl-1 mb-3">
                   Select Role
                 </legend>
-                <div className="grid grid-cols-3 gap-3" role="radiogroup" aria-label="Account role">
+                <div className="grid grid-cols-3 gap-3" role="radiogroup">
                   {ROLES.map((rol) => {
                     const isAdminBlocked = rol.value === 'admin' && adminExist;
                     const isSelected = role === rol.value;
@@ -155,33 +153,25 @@ const EditRoleAndPhone = () => {
                           setError('');
                         }}
                         disabled={isAdminBlocked}
-                        role="radio"
-                        aria-checked={isSelected}
-                        aria-disabled={isAdminBlocked}
-                        aria-label={`${rol.label}${isAdminBlocked ? ' (unavailable)' : ''} — ${rol.description}`}
-                        title={isAdminBlocked ? 'An admin already exists' : rol.description}
-                        className={`p-4 rounded-lg transition-all flex flex-col items-center justify-center gap-2 border-2 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-text focus-visible:ring-offset-2
+                        className={`p-4 rounded-lg transition-all flex flex-col items-center justify-center gap-2 border-2 text-center focus:outline-none 
                           ${
                             isSelected
-                              ? 'border-text bg-[#6c63ff0d] text-text'
-                              : 'border-[#e5e3f5] bg-[#f8f7ff] text-[#6b7280] hover:border-text/95 hover:text-[#0f0f0f]'
+                              ? 'border-primary bg-primary/5 text-primary'
+                              : 'border-[#e5e3f5] dark:border-[#222] bg-[#f8f7ff] dark:bg-[#181818] text-[#6b7280] dark:text-[#555] hover:border-primary/50 dark:hover:border-primary/50 hover:text-primary dark:hover:text-primary'
                           }
                           ${isAdminBlocked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <span aria-hidden="true">{rol.icon}</span>
                         <div>
                           <p
-                            className="text-xs font-semibold"
+                            className="text-[10px] font-bold uppercase tracking-tight"
                             style={{ fontFamily: 'Syne, sans-serif' }}
                           >
                             {rol.label}
                           </p>
-                          <p className="text-[10px] leading-tight mt-0.5 opacity-70 hidden sm:block">
-                            {rol.description}
-                          </p>
                         </div>
                         {isSelected && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-text" aria-hidden="true" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary" aria-hidden="true" />
                         )}
                       </motion.button>
                     );
@@ -193,13 +183,10 @@ const EditRoleAndPhone = () => {
               <AnimatePresence>
                 {error && (
                   <motion.p
-                    id="form-error"
-                    role="alert"
-                    aria-live="polite"
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    className="text-red-500 text-xs bg-red-50 border border-red-100 rounded-lg px-4 py-2.5"
+                    className="text-red-500 text-xs bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-lg px-4 py-2.5"
                   >
                     {error}
                   </motion.p>
@@ -211,13 +198,11 @@ const EditRoleAndPhone = () => {
                 type="submit"
                 disabled={loading}
                 whileTap={{ scale: 0.98 }}
-                aria-label={loading ? 'Submitting, please wait' : 'Submit role and phone number'}
-                aria-busy={loading}
-                className="mt-1 px-6 py-3.5 bg-text text-white rounded-lg hover:bg-text/95 transition-colors cursor-pointer w-full flex items-center justify-center gap-2 font-medium text-sm disabled:opacity-70 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-text focus-visible:ring-offset-2"
+                className="mt-1 px-6 py-3.5 bg-[#111] dark:bg-white text-white dark:text-[#111] rounded-lg hover:bg-primary dark:hover:bg-primary dark:hover:text-white transition-all cursor-pointer w-full flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-[10px] disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <>
-                    <CgSpinner className="text-xl animate-spin" aria-hidden="true" />
+                    <CgSpinner className="text-xl animate-spin" />
                     <span>Submitting…</span>
                   </>
                 ) : (
