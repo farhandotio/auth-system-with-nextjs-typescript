@@ -26,13 +26,32 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // const session = await auth();
+  // Session data fetch kora (auth configuration onujayi)
+  const session = await auth();
 
-  // if (!session) {
-  //   const loginUrl = new URL('/login', request.url);
-  //   loginUrl.searchParams.set('callbackUrl', request.url);
-  //   return NextResponse.redirect(loginUrl);
-  // }
+  // 1. Jodi session na thake, login-e pathabe
+  if (!session || !session.user) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const role = (session.user as any).role; // User role fetch
+
+  // 2. Dashboard Protection Logic
+  if (pathname.startsWith('/dashboard')) {
+    if (pathname.startsWith('/dashboard/admin') && role !== 'admin') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    if (pathname.startsWith('/dashboard/seller') && role !== 'seller') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+
+    if (pathname.startsWith('/dashboard/user') && role !== 'user') {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
 
   return NextResponse.next();
 }

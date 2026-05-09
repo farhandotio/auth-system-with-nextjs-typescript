@@ -14,9 +14,9 @@ import {
   FiChevronDown,
   FiShoppingBag,
   FiPieChart,
+  FiPlusSquare,
+  FiPackage,
 } from 'react-icons/fi';
-import { MdOutlineNavigation, MdOutlineInfo } from 'react-icons/md';
-import { TbLayoutBottombar } from 'react-icons/tb';
 import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import { signOut } from 'next-auth/react';
@@ -39,39 +39,59 @@ export default function LayoutClient({
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [customizerOpen, setCustomizerOpen] = useState(pathname?.includes('/theme/'));
+  const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const role = user?.role;
-  if (!role) redirect('/');
+  const role = user?.role || 'user';
 
+  // Navigation Logic with Sub-routes
   const menuConfig = {
     user: [
       { name: 'Overview', path: '/dashboard', icon: FiGrid },
       { name: 'My Profile', path: '/dashboard/user/profile', icon: FiUser },
-      { name: 'My Orders', path: '/dashboard/user/orders', icon: FiShoppingBag },
+      {
+        name: 'My Orders',
+        path: '/dashboard/user/orders',
+        icon: FiShoppingBag,
+        subItems: [{ name: 'Track Order', path: '/dashboard/user/orders/track', icon: FiPackage }],
+      },
     ],
     seller: [
       { name: 'Overview', path: '/dashboard', icon: FiGrid },
-      { name: 'Shop Settings', path: '/dashboard/seller/shop', icon: FiSettings },
-      { name: 'Products', path: '/dashboard/seller/products', icon: FiShoppingBag },
+      {
+        name: 'Products',
+        path: '/dashboard/seller/products',
+        icon: FiShoppingBag,
+        subItems: [
+          { name: 'Add Product', path: '/dashboard/seller/products/create', icon: FiPlusSquare },
+          {
+            name: 'Manage Inventory',
+            path: '/dashboard/seller/products/inventory',
+            icon: FiPackage,
+          },
+        ],
+      },
       { name: 'Analytics', path: '/dashboard/seller/analytics', icon: FiPieChart },
+      { name: 'Shop Settings', path: '/dashboard/seller/shop', icon: FiSettings },
     ],
     admin: [
       { name: 'Overview', path: '/dashboard', icon: FiGrid },
-      { name: 'User Management', path: '/dashboard/admin/users', icon: FiUsers },
-      { name: 'Product Management', path: '/dashboard/admin/products', icon: FiShoppingBag },
+      {
+        name: 'Management',
+        path: '/dashboard/admin/manage',
+        icon: FiUsers,
+        subItems: [
+          { name: 'All Users', path: '/dashboard/admin/users', icon: FiUsers },
+          { name: 'All Products', path: '/dashboard/admin/products', icon: FiShoppingBag },
+          { name: 'Theme Settings', path: '/dashboard/admin/theme', icon: FiSettings },
+        ],
+      },
     ],
   };
 
-  const adminCustomizer = [
-    { name: 'Navbar Edit', path: '/dashboard/admin/theme/navbar', icon: MdOutlineNavigation },
-    { name: 'Footer Edit', path: '/dashboard/admin/theme/footer', icon: TbLayoutBottombar },
-    { name: 'About Page Edit', path: '/dashboard/admin/theme/about', icon: MdOutlineInfo },
-  ];
+  const currentMenu = menuConfig[role as keyof typeof menuConfig] || menuConfig.user;
 
-  const currentMenu = menuConfig[role as keyof typeof menuConfig] || [];
-
+  // Handle click outside for dropdown
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
@@ -81,15 +101,40 @@ export default function LayoutClient({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!pathname) return;
+
+    const isAdminRoute = pathname.startsWith('/dashboard/admin');
+    const isSellerRoute = pathname.startsWith('/dashboard/seller');
+    const isUserRoute = pathname.startsWith('/dashboard/user');
+
+    // Protection Logic
+    if (role === 'user' && (isAdminRoute || isSellerRoute)) {
+      redirect('/dashboard');
+    }
+
+    if (role === 'seller' && (isAdminRoute || isUserRoute)) {
+      // Seller kintu tar profile (/dashboard/user/profile) access korte parbe, tai oita check kora jete pare
+      if (!pathname.includes('/profile')) {
+        redirect('/dashboard');
+      }
+    }
+
+    if (role === 'admin') {
+      // Admin usually sob access korte pare, tai redirect dorkar nai
+    }
+  }, [pathname, role]);
+
+  const toggleSubMenu = (name: string) => {
+    setOpenSubMenus((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
+
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-[#fff] dark:bg-[#111] text-[#111] dark:text-[#fff] border-r border-[#eee] dark:border-[#222]">
+    <div className="flex flex-col h-full bg-white dark:bg-[#111] border-r border-[#eee] dark:border-[#222]">
       <div className="h-16 flex items-center px-6 border-b border-[#eee] dark:border-[#222]">
-        <Link href="/" className="flex items-center gap-3 group">
-          {/* <div className="w-8 h-8 bg-[#111] dark:bg-[#fff] flex items-center justify-center rounded-sm transition-all group-hover:bg-primary">
-            <span className="text-white dark:text-[#111] text-xs font-black">G</span>
-          </div> */}
+        <Link href="/" className="flex items-center gap-3">
           <span
-            className="text-sm font-bold tracking-widest uppercase text-[#111] dark:text-[#fff]"
+            className="text-sm font-bold tracking-widest uppercase text-[#111] dark:text-white"
             style={{ fontFamily: 'Syne, sans-serif' }}
           >
             Gadget BDs
@@ -99,75 +144,73 @@ export default function LayoutClient({
 
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1 scrollbar-hide">
         {currentMenu.map((item) => {
+          const hasSubItems = item.subItems && item.subItems.length > 0;
           const isActive = pathname === item.path;
+          const isSubActive = item.subItems?.some((sub) => pathname === sub.path);
+          const isOpen = openSubMenus[item.name] || isSubActive;
+
           return (
-            <Link
-              key={item.path}
-              href={item.path}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-[0.15em] transition-all duration-150 ${
-                isActive
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-[#555] dark:text-[#bbb] hover:text-[#111] dark:hover:text-[#fff] hover:bg-[#f5f5f5] dark:hover:bg-[#222]'
-              }`}
-            >
-              <item.icon size={16} />
-              {item.name}
-            </Link>
+            <div key={item.name} className="flex flex-col">
+              <div className="flex items-center">
+                <Link
+                  href={item.path}
+                  className={`flex-1 flex items-center gap-3 px-4 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-[0.15em] transition-all ${
+                    isActive
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'text-[#555] dark:text-[#bbb] hover:bg-[#f5f5f5] dark:hover:bg-[#222]'
+                  }`}
+                >
+                  <item.icon size={16} />
+                  {item.name}
+                </Link>
+                {hasSubItems && (
+                  <button
+                    onClick={() => toggleSubMenu(item.name)}
+                    className="p-2.5 text-[#555] dark:text-[#bbb] hover:text-primary transition-colors"
+                  >
+                    <motion.div animate={{ rotate: isOpen ? 0 : -90 }}>
+                      <FiChevronDown size={14} />
+                    </motion.div>
+                  </button>
+                )}
+              </div>
+
+              {hasSubItems && (
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden ml-6 mt-1 border-l border-[#eee] dark:border-[#222]"
+                    >
+                      {item.subItems?.map((sub) => (
+                        <Link
+                          key={sub.path}
+                          href={sub.path}
+                          className={`flex items-center gap-3 px-6 py-2.5 text-[9px] font-bold uppercase tracking-widest transition-all ${
+                            pathname === sub.path
+                              ? 'text-primary'
+                              : 'text-[#777] dark:text-[#888] hover:text-[#111] dark:hover:text-white'
+                          }`}
+                        >
+                          <sub.icon size={14} />
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              )}
+            </div>
           );
         })}
-
-        {role === 'admin' && (
-          <div className="pt-2">
-            <button
-              onClick={() => setCustomizerOpen(!customizerOpen)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-sm text-[10px] font-bold uppercase tracking-[0.15em] transition-all ${
-                pathname?.includes('/theme/') ? 'text-primary' : 'text-[#555] dark:text-[#bbb]'
-              } hover:bg-[#f5f5f5] dark:hover:bg-[#222]`}
-            >
-              <FiSettings size={16} />
-              <span className="flex-1 text-left">Customizer</span>
-              <motion.div
-                animate={{ rotate: customizerOpen ? 0 : 90 }}
-                transition={{ duration: 0.2 }}
-              >
-                <FiChevronDown size={14} />
-              </motion.div>
-            </button>
-
-            <AnimatePresence>
-              {customizerOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
-                  className="overflow-hidden bg-[#fafafa] dark:bg-[#181818] mt-1 border-l border-[#eee] dark:border-[#333] ml-6"
-                >
-                  {adminCustomizer.map((sub) => (
-                    <Link
-                      key={sub.path}
-                      href={sub.path}
-                      className={`flex items-center gap-3 px-6 py-2.5 text-[9px] font-bold uppercase tracking-widest transition-all ${
-                        pathname === sub.path
-                          ? 'text-primary'
-                          : 'text-[#777] dark:text-[#888] hover:text-[#111] dark:hover:text-[#fff]'
-                      }`}
-                    >
-                      <sub.icon size={14} />
-                      {sub.name}
-                    </Link>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
       </div>
 
       <div className="p-4 border-t border-[#eee] dark:border-[#222]">
         <Link
           href="/"
-          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-sm border border-[#ddd] dark:border-[#333] text-[9px] font-bold uppercase tracking-[0.2em] text-[#555] dark:text-[#bbb] hover:bg-[#111] dark:hover:bg-[#fff] hover:text-[#fff] dark:hover:text-[#111] transition-all"
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-sm border border-[#ddd] dark:border-[#333] text-[9px] font-bold uppercase tracking-[0.2em] text-[#555] dark:text-[#bbb] hover:bg-[#111] dark:hover:bg-white hover:text-white dark:hover:text-[#111] transition-all"
         >
           <FiArrowLeft size={14} /> Marketplace
         </Link>
@@ -176,16 +219,16 @@ export default function LayoutClient({
   );
 
   return (
-    <div className="h-screen flex bg-[#fff] dark:bg-[#000] overflow-hidden transition-colors duration-200">
-      <aside className="w-64 hidden lg:block z-50 shadow-[1px_0_0_0_rgba(0,0,0,0.05)] dark:shadow-[1px_0_0_0_rgba(255,255,255,0.05)]">
+    <div className="h-screen flex bg-white dark:bg-black overflow-hidden transition-colors duration-200">
+      <aside className="w-64 hidden lg:block z-50">
         <SidebarContent />
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white dark:bg-[#111] border-b border-[#eee] dark:border-[#222] flex items-center justify-between px-4 md:px-6 z-40 transition-colors duration-200">
+        <header className="h-16 bg-white dark:bg-[#111] border-b border-[#eee] dark:border-[#222] flex items-center justify-between px-4 md:px-6 z-40 transition-colors">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="lg:hidden text-[#555] dark:text-[#bbb] hover:bg-[#f5f5f5] dark:hover:bg-[#222] rounded-sm transition-all"
+            className="lg:hidden text-[#555] dark:text-[#bbb]"
           >
             <FiMenu size={22} />
           </button>
@@ -194,17 +237,17 @@ export default function LayoutClient({
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-4 p-1 rounded-sm group transition-all"
+                className="flex items-center gap-4 p-1 group"
               >
-                <div className="hidden md:block text-right leading-none">
-                  <p className="text-[10px] font-bold text-[#111] dark:text-[#fff] uppercase tracking-widest">
+                <div className="hidden md:block text-right">
+                  <p className="text-[10px] font-bold text-[#111] dark:text-white uppercase tracking-widest">
                     {user?.name}
                   </p>
-                  <p className="text-[8px] font-bold text-primary uppercase mt-1 tracking-tighter opacity-80">
+                  <p className="text-[8px] font-bold text-primary uppercase mt-1 tracking-tighter">
                     {role}
                   </p>
                 </div>
-                <div className="h-8 w-8 rounded-full bg-[#eee] dark:bg-[#222] border border-[#ddd] dark:border-[#333] flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
+                <div className="h-8 w-8 rounded-full bg-[#eee] dark:bg-[#222] border border-[#ddd] dark:border-[#333] flex items-center justify-center overflow-hidden">
                   {user?.image ? (
                     <Image
                       src={user.image}
@@ -222,10 +265,9 @@ export default function LayoutClient({
               <AnimatePresence>
                 {isDropdownOpen && (
                   <motion.div
-                    initial={{ opacity: 0, y: 5 }}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 5 }}
-                    transition={{ duration: 0.15 }}
+                    exit={{ opacity: 0, y: 10 }}
                     className="absolute right-0 mt-3 w-52 bg-white dark:bg-[#111] border border-[#eee] dark:border-[#222] rounded-sm shadow-xl p-1 z-50"
                   >
                     <div className="px-4 py-3 border-b border-[#eee] dark:border-[#222] mb-1">
@@ -252,14 +294,15 @@ export default function LayoutClient({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#fafafa] dark:bg-[#0a0a0a] dark:text-[#fafafa] text-[#0a0a0a] transition-colors duration-300">
-          <div className="mx-auto">{children}</div>
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#fafafa] dark:bg-[#0a0a0a]">
+          <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
 
+      {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
         {isSidebarOpen && (
-          <div className="fixed inset-0 z-100 lg:hidden">
+          <div className="fixed inset-0 z-[100] lg:hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -271,13 +314,13 @@ export default function LayoutClient({
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.25 }}
-              className="absolute left-0 top-0 h-full w-72 shadow-2xl"
+              transition={{ type: 'tween', duration: 0.3 }}
+              className="absolute left-0 top-0 h-full w-72"
             >
               <SidebarContent />
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="absolute top-5 -right-12 text-white hover:text-red-400 transition-colors"
+                className="absolute top-5 -right-12 text-white"
               >
                 <FiX size={26} />
               </button>

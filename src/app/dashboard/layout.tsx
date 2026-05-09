@@ -9,8 +9,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await auth();
   const user = await User.findById(session?.user?.id);
 
-  if (!user) {
-    redirect('/');
+
+  if (!session || !session.user) {
+    redirect('/login');
   }
 
   const plainUser = JSON.parse(JSON.stringify(user));
