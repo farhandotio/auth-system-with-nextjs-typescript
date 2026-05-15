@@ -5,9 +5,12 @@ import Provider from '@/Provider';
 import connectDB from '@/lib/connectDB';
 import { auth } from '@/auth';
 import User from '@/models/user.model';
-import { redirect } from 'next/navigation';
 import EditRoleAndPhone from '@/components/EditRoleAndPhone';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import EditSellerDetails from '@/components/EditSellerDetails';
+import StoreProvider from '@/store/StoreProvider';
+import InitHooks from '@/InitHooks';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -34,7 +37,11 @@ export default async function RootLayout({
   const session = await auth();
   const user = await User.findById(session?.user?.id);
 
-  const incomoplete = !user?.role || !user?.phone || (!user?.phone && user?.role == 'user');
+  const incomplete = !user?.role || !user?.phone || (!user?.phone && user?.role === 'user');
+
+  const isSellerMissingDetails =
+    user?.role === 'seller' && (!user?.shopName || !user?.shopAddress || !user?.shopType);
+
   const plainUser = JSON.parse(JSON.stringify(user));
 
   return (
@@ -48,14 +55,20 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <Provider>
-          {user && incomoplete ? (
-            <EditRoleAndPhone />
-          ) : (
-            <>
-              <Navbar user={plainUser} />
-              {children}
-            </>
-          )}
+          <StoreProvider>
+            <InitHooks />
+            {user && incomplete ? (
+              <EditRoleAndPhone />
+            ) : user?.role === 'seller' && isSellerMissingDetails ? (
+              <EditSellerDetails />
+            ) : (
+              <>
+                <Navbar user={plainUser} />
+                {children}
+                <Footer user={plainUser} />
+              </>
+            )}
+          </StoreProvider>
         </Provider>
       </body>
     </html>

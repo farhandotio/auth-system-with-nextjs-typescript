@@ -11,7 +11,6 @@ export interface IUser {
   // Seller-specific fields
   shopName?: string;
   shopAddress?: string;
-  shopPhone?: string;
   shopType?: string;
   isApproved?: boolean;
   verificationStatus?: 'pending' | 'approved' | 'rejected';
@@ -63,9 +62,6 @@ const userSchema = new mongoose.Schema<IUser>(
       type: String,
     },
     shopAddress: {
-      type: String,
-    },
-    shopPhone: {
       type: String,
     },
     shopType: {
